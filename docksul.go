@@ -115,6 +115,21 @@ func (b *ContainerServiceBridge) register(service map[string]interface{}) {
 	}
 }
 
+func (b *ContainerServiceBridge) registerKV(container *docker.Container) {
+	url := b.consulAddr + "/v1/kv/services/" +  conatiner.Name
+	req, err := http.NewRequest("PUT", url, container.NetworkSettings.IPAddress)
+
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = http.DefaultClient.Do(req)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (b *ContainerServiceBridge) deregister(serviceId string) {
 	url := b.consulAddr + "/v1/agent/service/deregister/" + serviceId
 	_, err := http.DefaultClient.Get(url)
@@ -134,6 +149,7 @@ func (b *ContainerServiceBridge) Link(containerId string) {
 			portDefs = append(portDefs, []string{published[0].HostPort, p[0], p[1]})
 		}
 	}
+	//TODO Put here the call to registerKV !!!
 
 	multiservice := len(portDefs) > 1
 	for _, port := range portDefs {
@@ -142,6 +158,8 @@ func (b *ContainerServiceBridge) Link(containerId string) {
 		b.linked[container.ID] = append(b.linked[container.ID], NewLinked(service["Name"].(string), service["ID"].(string)))
 		log.Println("link:", container.ID[:12], service)
 	}
+	b.registerKV(container)
+	log.Println("new KV:", container.Name, container.NetworkSettings.IPAddress)
 }
 
 func (b *ContainerServiceBridge) Unlink(containerId string) {
