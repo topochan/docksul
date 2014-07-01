@@ -116,8 +116,8 @@ func (b *ContainerServiceBridge) register(service map[string]interface{}) {
 }
 
 func (b *ContainerServiceBridge) registerKV(container *docker.Container) {
-	url := b.consulAddr + "/v1/kv/services/" +  conatiner.Name
-	req, err := http.NewRequest("PUT", url, container.NetworkSettings.IPAddress)
+	url := b.consulAddr + "/v1/kv/services" +  container.Name
+	req, err := http.NewRequest("PUT", url,strings.NewReader(container.NetworkSettings.IPAddress))
 
 	if err != nil {
 		panic(err)
